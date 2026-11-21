@@ -1,0 +1,92 @@
+{
+  "living_cost_benchmarks": {
+    "meals": {
+      "economy": {
+        "breakfast": 15000,
+        "lunch": 25000,
+        "dinner": 25000,
+        "description": "Tự nấu ăn hoặc cơm sinh viên / bình dân tiết kiệm"
+      },
+      "standard": {
+        "breakfast": 25000,
+        "lunch": 40000,
+        "dinner": 35000,
+        "description": "Ăn sáng nhẹ, cơm trưa văn phòng bình dân, tối tự nấu"
+      },
+      "comfortable": {
+        "breakfast": 35000,
+        "lunch": 55000,
+        "dinner": 50000,
+        "description": "Ăn ngoài thoải mái kèm đồ uống"
+      }
+    },
+    "transport": {
+      "motorbike_standard_daily": 10000,
+      "motorbike_heavy_daily": 15000,
+      "bus_monthly_daily_equiv": 7000
+    }
+  },
+  "investment_channels": [
+    {
+      "id": "flex_saving",
+      "name": "Tích lũy linh hoạt / Túi sinh lời (MoMo, ZaloPay, Viettel Money, Ngân hàng số)",
+      "min_monthly_vnd": 50000,
+      "expected_annual_return": 0.048,
+      "liquidity": "Rút tức thì 24/7",
+      "risk_level": "Rất thấp",
+      "tier": "EMERGENCY_AND_MICRO",
+      "suitability": "Ưu tiên số 1 để xây dựng Quỹ dự phòng khẩn cấp và cất giữ tiền nhàn rỗi ngắn hạn."
+    },
+    {
+      "id": "bond_fund",
+      "name": "Chứng chỉ quỹ Trái phiếu (TCBF, BVBF, VNDBF trên Fmarket / Finhay)",
+      "min_monthly_vnd": 100000,
+      "expected_annual_return": 0.075,
+      "liquidity": "Khớp lệnh T+1 đến T+2",
+      "risk_level": "Thấp",
+      "tier": "CONSERVATIVE_GROWTH",
+      "suitability": "Phù hợp tích vốn an toàn với lãi suất cao hơn gửi tiết kiệm ngân hàng."
+    },
+    {
+      "id": "online_term_deposit",
+      "name": "Tiết kiệm tích lũy Online kỳ hạn 3-6 tháng (Cake, Timo, Techcombank, VPBank)",
+      "min_monthly_vnd": 200000,
+      "expected_annual_return": 0.056,
+      "liquidity": "Theo kỳ hạn (rút trước hạn hưởng lãi không kỳ hạn)",
+      "risk_level": "Rất thấp",
+      "tier": "CONSERVATIVE_GROWTH",
+      "suitability": "Giúp kỷ luật giữ tiền, tránh tiêu xài ngẫu hứng."
+    },
+    {
+      "id": "equity_etf_fund",
+      "name": "Tích sản Chứng chỉ quỹ Cổ phiếu / ETF VN30 (VESAF, DCDS, E1VFVN30)",
+      "min_monthly_vnd": 200000,
+      "expected_annual_return": 0.12,
+      "liquidity": "Khớp lệnh T+2",
+      "risk_level": "Trung bình - Khá",
+      "tier": "LONG_TERM_WEALTH",
+      "suitability": "Tối ưu cho tích sản định kỳ (DCA) từ 1 - 5 năm để hưởng sức mạnh lãi kép."
+    },
+    {
+      "id": "gold_accumulation",
+      "name": "Vàng nhẫn 9999 tích lũy nhỏ lẻ (0.5 chỉ - 1 chỉ)",
+      "min_monthly_vnd": 1500000,
+      "expected_annual_return": 0.09,
+      "liquidity": "Cao",
+      "risk_level": "Trung bình",
+      "tier": "LONG_TERM_WEALTH",
+      "suitability": "Bảo toàn giá trị tài sản trước lạm phát khi khoản tích lũy đạt mốc 3 - 5 triệu."
+    },
+    {
+      "id": "self_investment",
+      "name": "Đầu tư bản thân (Sách chuyên ngành, Khóa học kỹ năng / Ngoại ngữ / AI)",
+      "min_monthly_vnd": 100000,
+      "expected_annual_return": 0.25,
+      "liquidity": "Tăng thu nhập chủ động lâu dài",
+      "risk_level": "Không rủi ro mất vốn kiến thức",
+      "tier": "HUMAN_CAPITAL",
+      "suitability": "Kênh sinh lời cao nhất khi vốn nhỏ: giúp tăng lương và thu nhập phụ."
+    }
+  ]
+}
+
