@@ -86,8 +86,8 @@ def classify_question_intent(question: str) -> str:
 
     if any(k in q for k in [
         'mua xe', 'mua nhà', 'mua máy tính', 'mua laptop', 'mua điện thoại', 'mua iphone',
-        'mục tiêu', 'để dành đủ', 'bao lâu thì đủ', 'cần tiết kiệm bao lâu', 'không đủ tiền',
-        'tiết kiệm được', 'muốn mua'
+        'mục tiêu', 'để dành', 'dư ', 'cuối năm', 'bao lâu thì đủ', 'cần tiết kiệm bao lâu',
+        'không đủ tiền', 'tiết kiệm được', 'muốn mua', 'tích lũy được'
     ]):
         return 'GOAL_SAVING'
 
@@ -104,10 +104,7 @@ def classify_question_intent(question: str) -> str:
     if any(k in q for k in ['là gì', 'như thế nào là', 'khác gì', 'có an toàn không', 'lạm phát', 'bắt đầu từ đâu']):
         return 'KNOWLEDGE_QA'
 
-    if any(k in q for k in ['bữa', '1 ngày', 'mỗi ngày', 'xăng', 'ăn sáng', 'ăn trưa', 'ăn tối', 'sinh hoạt', 'thuê trọ', 'tiền trọ']):
-        return 'DAILY_PLAN'
-
-    if extract_all_amounts(q):
+    if any(k in q for k in ['bữa', '1 ngày', 'mỗi ngày', 'xăng', 'ăn sáng', 'ăn trưa', 'ăn tối', 'sinh hoạt', 'thuê trọ', 'tiền trọ', 'chia ngân sách', 'chia chi tiêu']):
         return 'DAILY_PLAN'
 
     return 'GENERAL_FINANCE'
@@ -612,10 +609,9 @@ def call_server_llm_providers(prompt: str, custom_gemini_key: Optional[str] = No
             client = genai.Client(api_key=gemini_key)
             gemini_models = (
                 "gemini-3.5-flash-lite",
+                "gemini-3.5-flash",
                 "gemini-3.1-flash-lite",
                 "gemini-flash-lite-latest",
-                "gemini-3.5-flash",
-                "gemini-flash-latest",
                 "gemma-4-31b-it",
             )
             for m in gemini_models:
@@ -677,11 +673,20 @@ def generate_advisor_reply(
         history_str = "\n".join([f"- {h.get('role', 'user')}: {h.get('text', '')}" for h in recent])
 
     is_open_qa = analysis["intent"] in ("GENERAL_FINANCE", "KNOWLEDGE_QA")
+    temoney_app_guide = (
+        "Kiến thức về ứng dụng Temoney (dùng khi người dùng hỏi cách sử dụng app): "
+        "- Quản lý cá nhân: Dashboard, Đa ví, Thêm giao dịch (nhập tay, quét hóa đơn OCR bằng ảnh, nhập bằng giọng nói Voice), Ngân sách 6 chiếc lọ, Phân tích AI theo ngày/tháng/năm. "
+        "- Quản lý nhóm: Tạo nhóm, kết bạn & mời nhóm bằng mã QR, chia hóa đơn (chia đều hoặc chia cụ thể), sửa/xoá khoản chi khi đang thảo luận, bình luận góp ý từng hóa đơn, rời nhóm. "
+        "- Cài đặt: Đổi ngôn ngữ Việt/Anh, xuất báo cáo Excel/PDF, gửi Vé hỗ trợ (Ticket) và xem Thông báo ứng dụng."
+    )
+
     if is_open_qa:
         sys_prompt = f"""Bạn là Trợ lý AI Thông minh & Chuyên gia Cố vấn Tài chính Cá nhân của ứng dụng Temoney tại Việt Nam.
-Nhiệm vụ của bạn là trả lời CHÍNH XÁC, ĐẦY ĐỦ và ĐÚNG TRỌNG TÂM mọi câu hỏi của người dùng (từ câu hỏi tài chính cá nhân, đầu tư, tiết kiệm, thuế, bảo hiểm, hướng dẫn sử dụng app Temoney, cho đến các câu hỏi đời sống/tư vấn chung).
+Nhiệm vụ của bạn là hiểu sâu ý định thực sự của người dùng và trả lời CHÍNH XÁC, CỤ THỂ, SẮC BÉN, ĐÚNG TRỌNG TÂM mọi câu hỏi (tài chính cá nhân, tiết kiệm, đầu tư, thuế, bảo hiểm, kinh doanh nhỏ, tâm lý chi tiêu, cách dùng app Temoney, hoặc các câu hỏi tư vấn đời sống).
 
-Ngữ cảnh ví thực tế của người dùng (chỉ trích dẫn khi câu hỏi có liên quan đến ví/tài chính của họ):
+{temoney_app_guide}
+
+Ngữ cảnh ví thực tế của người dùng (chỉ trích dẫn khi câu hỏi liên quan đến tài chính của họ):
 {json.dumps(context or {}, ensure_ascii=False)}
 
 Lịch sử hội thoại gần đây:
@@ -690,20 +695,22 @@ Lịch sử hội thoại gần đây:
 Câu hỏi hiện tại của người dùng: "{question}"
 
 Quy tắc trả lời:
-1. Trả lời trực tiếp vào đúng câu hỏi người dùng vừa hỏi bằng tiếng Việt tự nhiên, rõ ràng, dễ hiểu (dùng gạch đầu dòng ngắn gọn nếu cần).
-2. Không tự ý bịa ra kế hoạch ăn uống hay số tiền giả định nếu người dùng không hỏi về chia ngân sách.
-3. Nếu câu hỏi liên quan đến tài chính cá nhân, đưa ra giải pháp thực tế phù hợp bối cảnh Việt Nam."""
+1. Trả lời thẳng vào đúng vấn đề người dùng vừa hỏi bằng tiếng Việt tự nhiên, thông minh, rõ ràng (dùng gạch đầu dòng ngắn gọn, có số liệu/ví dụ thực tế tại Việt Nam nếu phù hợp).
+2. Nếu người dùng chỉ chào hỏi hoặc hỏi ngắn, hãy trả lời thân thiện và gợi mở họ có thể hỏi gì.
+3. Không tự ý bịa ra kế hoạch ăn uống hay số tiền giả định nếu người dùng không hỏi về chia ngân sách.
+4. Nếu câu hỏi có nhiều khía cạnh, hãy đưa ra 2-3 phương án hành động cụ thể mà người dùng có thể áp dụng ngay hôm nay."""
     else:
         sys_prompt = f"""Bạn là Chuyên gia Cố vấn Tài chính Cá nhân & Tích sản Thông minh của ứng dụng Temoney tại Việt Nam.
+{temoney_app_guide}
 Ngữ cảnh ví thực tế của người dùng: {json.dumps(context or {}, ensure_ascii=False)}
 Lịch sử hội thoại gần đây:
 {history_str if history_str else "(Chưa có lịch sử)"}
 
 Câu hỏi hiện tại của người dùng: "{question}"
-Kết quả phân tích định lượng chuẩn xác từ hệ thống (hãy giữ đúng các con số này nếu dùng):
+Số liệu phân tích định lượng tham khảo từ bộ tính toán Python (hãy sử dụng nếu khớp với câu hỏi của người dùng, nếu câu hỏi hỏi khía cạnh khác thì ưu tiên trả lời đúng câu hỏi của người dùng):
 {analysis['reply']}
 
-Hãy viết câu trả lời tự nhiên, đồng cảm, thực tế, sắc bén và đúng trọng tâm câu hỏi của người dùng bằng tiếng Việt (160-300 từ)."""
+Hãy viết câu trả lời tự nhiên, đồng cảm, thực tế, sắc bén và trả lời ĐÚNG trọng tâm câu hỏi của người dùng bằng tiếng Việt (160-320 từ)."""
 
     llm_res = call_server_llm_providers(sys_prompt, custom_gemini_key=custom_api_key)
     if llm_res:

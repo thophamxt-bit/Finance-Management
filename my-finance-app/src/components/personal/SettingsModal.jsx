@@ -636,6 +636,71 @@ const SettingsModal = () => {
                         </div>
                     </div>
 
+                    {/* Section: Hỗ trợ người dùng (Ticket) & Thông báo ứng dụng */}
+                    <div className="pt-4 border-t border-slate-100 space-y-3">
+                        <div className="flex items-center gap-2">
+                            <span className="material-symbols-outlined text-blue-900 text-lg">support_agent</span>
+                            <div>
+                                <h4 className="text-sm font-extrabold text-slate-800">
+                                    {language === 'en' ? 'Support Tickets & Announcements' : 'Hỗ trợ người dùng & Thông báo'}
+                                </h4>
+                                <p className="text-[11px] text-slate-500">
+                                    {language === 'en'
+                                        ? 'Submit a support ticket or check system announcements'
+                                        : 'Gửi vé hỗ trợ sự cố cho quản trị viên hoặc xem thông báo ứng dụng'}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    closeSettings();
+                                    window.dispatchEvent(new CustomEvent('temoney_open_support', {
+                                        detail: { tab: 'TICKETS', createNew: false }
+                                    }));
+                                }}
+                                className="p-3.5 rounded-2xl border border-blue-200 bg-blue-50/70 hover:bg-blue-100/80 text-left flex items-center gap-3 cursor-pointer transition-all"
+                            >
+                                <div className="w-9 h-9 rounded-xl bg-blue-900 text-white flex items-center justify-center shrink-0 shadow-xs">
+                                    <span className="material-symbols-outlined text-lg">confirmation_number</span>
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="text-xs font-extrabold text-blue-950">
+                                        {language === 'en' ? 'Support Tickets' : 'Vé hỗ trợ (Ticket)'}
+                                    </p>
+                                    <p className="text-[10px] text-slate-600 truncate">
+                                        {language === 'en' ? 'Create & track support requests' : 'Tạo vé mới & theo dõi phản hồi'}
+                                    </p>
+                                </div>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    closeSettings();
+                                    window.dispatchEvent(new CustomEvent('temoney_open_support', {
+                                        detail: { tab: 'ANNOUNCEMENTS' }
+                                    }));
+                                }}
+                                className="p-3.5 rounded-2xl border border-amber-200 bg-amber-50/70 hover:bg-amber-100/80 text-left flex items-center gap-3 cursor-pointer transition-all"
+                            >
+                                <div className="w-9 h-9 rounded-xl bg-amber-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                                    <span className="material-symbols-outlined text-lg">campaign</span>
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="text-xs font-extrabold text-amber-950">
+                                        {language === 'en' ? 'App Announcements' : 'Thông báo ứng dụng'}
+                                    </p>
+                                    <p className="text-[10px] text-slate-600 truncate">
+                                        {language === 'en' ? 'View latest system updates' : 'Xem thông báo mới từ hệ thống'}
+                                    </p>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+
                     {/* Section Buttons */}
                     <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3 sticky bottom-0 bg-white/95 backdrop-blur-sm py-2">
                         <button

@@ -432,17 +432,65 @@ function runSmartFinancialEngine(question, context, history = []) {
         };
     }
 
-    // 6B. CÂU HỎI TỔNG QUÁT / MỞ RỘNG (KHI CHƯA KẾT NỐI ĐƯỢC SERVER AI 8001)
+    // 6B. CÂU HỎI TỔNG QUÁT / KHO MẪU FAQ THÔNG MINH (KHI SERVER AI 8001 CHƯA CHẠY)
     if (intent === 'GENERAL_FINANCE') {
+        const faqTemplates = [
+            {
+                keywords: ['xin chào', 'chào bạn', 'hello', 'hi ', 'alo', 'bạn là ai'],
+                reply: `Chào bạn! Tôi là **Temoney AI Wealth Advisor**.\n\nTôi có thể giúp bạn:\n• Lập kế hoạch tiết kiệm đạt mục tiêu (mua xe, mua laptop, du lịch...)\n• Chia ngân sách ăn uống/sinh hoạt theo ngày, tháng\n• Phân bổ lương theo quy tắc **6 Chiếc Lọ** hoặc **50/30/20**\n• Tư vấn kênh tích sản an toàn tại Việt Nam & kiểm toán sức khỏe ví của bạn!\n\nBạn cứ đặt câu hỏi cụ thể nhé!`
+            },
+            {
+                keywords: ['quét hóa đơn', 'ocr', 'chụp ảnh', 'giọng nói', 'voice'],
+                reply: `📸 **Hướng dẫn nhập giao dịch thông minh trên Temoney:**\n\n• **Quét hóa đơn AI (OCR):** Vào **Thêm giao dịch** → bấm **Quét hóa đơn**, tải ảnh hoặc chụp hóa đơn. AI tự đọc tên quán, tổng tiền, danh sách món và chọn sẵn danh mục.\n• **Nhập bằng giọng nói (Voice):** Bấm biểu tượng **Micro**, nói tự nhiên (VD: *"Sáng nay ăn phở hết 50k"*) để hệ thống tự điền và lưu giao dịch.`
+            },
+            {
+                keywords: ['nhóm', 'chia tiền', 'rời nhóm', 'mã qr', 'bình luận'],
+                reply: `👥 **Hướng dẫn sử dụng Chi tiêu Nhóm trên Temoney:**\n\n• **Kết bạn & mời nhóm:** Mở **Mã QR của tôi** hoặc **Quét QR kết bạn** ở thanh bên.\n• **Chia tiền & Thảo luận:** Tạo hóa đơn chia đều hoặc chia cụ thể; bấm vào từng khoản chi để **Bình luận góp ý**, **Sửa** hoặc **Xoá** khi nhóm đang bàn kế hoạch.\n• **Rời nhóm:** Bấm nút **Rời nhóm** ở thanh thông tin nhóm trên Group Dashboard.`
+            },
+            {
+                keywords: ['vé hỗ trợ', 'ticket', 'báo lỗi', 'thông báo', 'cài đặt'],
+                reply: `⚙️ **Gửi Vé hỗ trợ (Ticket) & Xem Thông báo:**\n\nBạn hãy bấm vào mục **Cài đặt (Settings)** ở góc dưới thanh bên trái → chọn **Vé hỗ trợ (Ticket)** để gửi yêu cầu cho Admin hoặc chọn **Thông báo ứng dụng** để xem tin mới nhất từ hệ thống.`
+            },
+            {
+                keywords: ['shopee', 'lazada', 'tiktok', 'mua sắm', 'bốc đồng', 'tiêu quá tay', 'nghiện mua'],
+                reply: `🛒 **5 cách cắt thói quen mua sắm bốc đồng hiệu quả:**\n\n1. **Quy tắc 24 giờ:** Cho món đồ vào giỏ nhưng đợi 24h mới chốt — 70% cơn thèm mua sẽ tự biến mất.\n2. **Xóa thẻ liên kết thanh toán 1 chạm:** Tạo thêm ma sát trước khi bấm thanh toán.\n3. **Đặt ngân sách ngày trên Temoney:** Theo dõi hạn mức mỗi ngày để thấy ngay cảnh báo khi sắp vượt trần.\n4. **Quy đổi ra giờ làm việc:** Trước khi mua món 500k, tự hỏi *"Món này có đáng bằng 1 ngày đi làm của mình không?"*.`
+            },
+            {
+                keywords: ['quỹ dự phòng', 'khẩn cấp', 'bao nhiêu tháng'],
+                reply: `🛡️ **Nguyên tắc xây dựng Quỹ dự phòng khẩn cấp:**\n\n• **Mức chuẩn:** Bằng **3 – 6 tháng** chi phí sinh hoạt thiết yếu (nhà trọ, ăn uống, điện nước, xăng xe).\n• **Nơi cất giữ:** Để ở **Túi sinh lời / Tiết kiệm rút linh hoạt (~4.5% - 5%/năm)** để rút tức thì 24/7 khi ốm đau hoặc mất việc, không dùng tiền này đi đầu tư rủi ro.`
+            },
+            {
+                keywords: ['thuế', 'tncn', 'thu nhập cá nhân', 'giảm trừ'],
+                reply: `🧾 **Tóm tắt nhanh Thuế TNCN tại Việt Nam:**\n\n• **Giảm trừ bản thân:** 11 triệu đồng/tháng (132 triệu/năm).\n• **Giảm trừ người phụ thuộc:** 4,4 triệu đồng/người/tháng.\n• **Thu nhập tính thuế** = Thu nhập chịu thuế − Bảo hiểm bắt buộc (10,5%) − Các khoản giảm trừ, sau đó tính theo biểu thuế lũy tiến từng phần từ **5% đến 35%**.`
+            },
+            {
+                keywords: ['bảo hiểm', 'nhân thọ', 'bhyt'],
+                reply: `🏥 **Lời khuyên về Bảo hiểm cá nhân:**\n\n1. **Ưu tiên số 1:** Luôn duy trì **BHYT** (chi phí thấp, bảo vệ rủi ro viện phí lớn).\n2. **Bảo hiểm nhân thọ / sức khỏe:** Chỉ nên trích tối đa **5% – 10% thu nhập năm**, ưu tiên bảo vệ người trụ cột và **không coi bảo hiểm nhân thọ là kênh đầu tư sinh lời cao**.`
+            }
+        ];
+
+        const matchedFaq = faqTemplates.find(item => item.keywords.some(kw => qLower.includes(kw)));
+        if (matchedFaq) {
+            return {
+                success: true,
+                intent,
+                source: 'smart-faq-matcher',
+                reply: matchedFaq.reply,
+                daily_plan: null,
+                investment_plan: null,
+                leak_insight: leakInsight
+            };
+        }
+
         return {
             success: true,
             intent,
             source: 'offline-general-fallback',
             reply: `Tôi đã nhận câu hỏi: **"${question}"**.\n\n` +
-                `Hiện tại dịch vụ AI chuyên sâu (\`localhost:8001\`) chưa phản hồi nên hệ thống đang chạy ở chế độ ngoại tuyến.\n` +
+                `Hiện tại máy chủ AI Gemini (\`localhost:8001\`) đang tạm tắt nên hệ thống chạy chế độ ngoại tuyến.\n` +
                 `• **Số dư ví hiện tại:** **${formatVnd(totalBalance)}**\n` +
                 `• **Thu / Chi tháng:** **${formatVnd(monthlyIncome)}** / **${formatVnd(monthlyExpense)}**\n\n` +
-                `💡 Hãy bật dịch vụ \`ocr-service\` (cổng 8001) để AI trả lời tự do mọi câu hỏi của bạn, hoặc hỏi kèm số tiền cụ thể để tôi tính toán ngay!`,
+                `💡 Hãy khởi chạy \`ocr-service\` (cổng 8001) để Gemini 3.5 AI trả lời tự do mọi câu hỏi, hoặc hỏi kèm con số cụ thể (VD: *"Lương 10 triệu muốn mua xe 20 triệu trong 6 tháng"*) để tính toán ngay!`,
             daily_plan: null,
             investment_plan: null,
             leak_insight: leakInsight

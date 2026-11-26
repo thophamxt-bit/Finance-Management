@@ -58,7 +58,7 @@ def optimize_image_for_ocr(image_bytes: bytes, max_dim: int = 1024) -> Image.Ima
 
 def extract_receipt_data(image_bytes: bytes, custom_api_key: str = None) -> ReceiptScanResult:
     from dotenv import load_dotenv
-    load_dotenv(override=True)
+    load_dotenv(os.path.join(os.path.dirname(__file__), ".env"), override=True)
     
     api_key = (custom_api_key or os.getenv("GEMINI_API_KEY", "")).strip()
     if not api_key:
@@ -84,13 +84,10 @@ def extract_receipt_data(image_bytes: bytes, custom_api_key: str = None) -> Rece
         )
         
         models_to_try = [
-            'gemini-flash-latest',
             'gemini-3.5-flash-lite',
             'gemini-3.5-flash',
-            'gemini-2.5-flash',
-            'gemini-2.0-flash',
-            'gemini-1.5-flash',
-            'gemini-2.0-flash-lite'
+            'gemini-3.1-flash-lite',
+            'gemini-flash-lite-latest',
         ]
         
         response = None
@@ -119,7 +116,7 @@ def extract_receipt_data(image_bytes: bytes, custom_api_key: str = None) -> Rece
                 raise last_err
             raise RuntimeError("Gemini AI không trả về nội dung cho hình ảnh này!")
             
-        result = parse_ai_json_response(response.text.strip(), source_model=used_model or 'gemini-flash-lite')
+        result = parse_ai_json_response(response.text.strip(), source_model=used_model or 'gemini-3.5-flash')
         
         if len(_RECEIPT_CACHE) >= _MAX_CACHE_SIZE:
             _RECEIPT_CACHE.pop(next(iter(_RECEIPT_CACHE)))
@@ -128,7 +125,7 @@ def extract_receipt_data(image_bytes: bytes, custom_api_key: str = None) -> Rece
     except Exception as e:
         raise RuntimeError(f"Lỗi khi AI phân tích ảnh hoá đơn: {e}")
 
-def parse_ai_json_response(response_text: str, source_model: str = 'gemini-flash-lite') -> ReceiptScanResult:
+def parse_ai_json_response(response_text: str, source_model: str = 'gemini-3.5-flash') -> ReceiptScanResult:
     cleaned_text = re.sub(r'^```json\s*', '', response_text, flags=re.IGNORECASE)
     cleaned_text = re.sub(r'\s*```$', '', cleaned_text).strip()
     
@@ -333,7 +330,7 @@ def parse_text_transaction(text: str, custom_api_key: str = None, user_categorie
     với tự động fallback sang Rule Engine siêu tốc nếu không có API key hoặc lỗi mạng.
     """
     from dotenv import load_dotenv
-    load_dotenv(override=True)
+    load_dotenv(os.path.join(os.path.dirname(__file__), ".env"), override=True)
     
     clean_text = text.strip()
     if not clean_text:
@@ -386,12 +383,10 @@ def parse_text_transaction(text: str, custom_api_key: str = None, user_categorie
         )
         
         models_to_try = [
-            'gemini-flash-latest',
             'gemini-3.5-flash-lite',
             'gemini-3.5-flash',
-            'gemini-2.5-flash',
-            'gemini-2.0-flash',
-            'gemini-1.5-flash'
+            'gemini-3.1-flash-lite',
+            'gemini-flash-lite-latest',
         ]
         
         response = None

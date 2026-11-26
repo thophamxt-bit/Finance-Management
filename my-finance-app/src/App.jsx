@@ -29,6 +29,7 @@ import ProtectedRoute from "./components/common/ProtectedRoute";
 import LanguageToggle from "./components/common/LanguageToggle";
 import SettingsModal from "./components/personal/SettingsModal";
 import AiFinancialChatbot from "./components/personal/AiFinancialChatbot";
+import UserSupportAndAnnouncementsWidget from "./components/common/UserSupportAndAnnouncementsWidget";
 
 function PageTitleManager() {
     const location = useLocation();
@@ -71,6 +72,9 @@ function App() {
 
                 {/* Trợ lý AI Cố vấn Tài chính & Tích sản Sinh lời toàn ứng dụng */}
                 <AiFinancialChatbot />
+
+                {/* Trung tâm Vé hỗ trợ người dùng & Thông báo ứng dụng */}
+                <UserSupportAndAnnouncementsWidget />
 
                 {/* Modal Cài đặt hệ thống (Settings) mở toàn cục */}
                 <SettingsModal />

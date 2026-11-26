@@ -6,7 +6,7 @@ const AdminDashboard = () => {
     const navigate = useNavigate();
 
     // --- State Tab chính ---
-    const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'users' | 'access_logs' | 'audit_logs'
+    const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'users' | 'access_logs' | 'audit_logs' | 'announcements'
     const [loading, setLoading] = useState(true);
     const [adminProfile, setAdminProfile] = useState(null);
 
@@ -35,6 +35,18 @@ const AdminDashboard = () => {
     const [accessLogs, setAccessLogs] = useState({ content: [], totalPages: 0, number: 0 });
     const [auditLogs, setAuditLogs] = useState({ content: [], totalPages: 0, number: 0 });
     const [logsPage, setLogsPage] = useState(0);
+
+    // --- State Thông báo hệ thống (Admin Announcements) ---
+    const [announcements, setAnnouncements] = useState([]);
+    const [loadingAnnouncements, setLoadingAnnouncements] = useState(false);
+    const [submittingAnnouncement, setSubmittingAnnouncement] = useState(false);
+    const [announcementFeedback, setAnnouncementFeedback] = useState(null);
+    const [newAnnouncement, setNewAnnouncement] = useState({
+        title: '',
+        content: '',
+        type: 'INFO',
+        isActive: true
+    });
 
     // Format tiền tệ
     const formatMoney = (amount) => {
@@ -144,12 +156,77 @@ const AdminDashboard = () => {
         }
     };
 
+    // 6. Tải danh sách Thông báo hệ thống
+    const fetchAnnouncements = async () => {
+        try {
+            setLoadingAnnouncements(true);
+            const res = await api.get("/api/admin/announcements");
+            setAnnouncements(Array.isArray(res.data) ? res.data : []);
+        } catch (err) {
+            console.error("Lỗi tải danh sách thông báo:", err);
+        } finally {
+            setLoadingAnnouncements(false);
+        }
+    };
+
+    // Tạo thông báo mới (POST /api/admin/announcements)
+    const handleCreateAnnouncement = async (e) => {
+        e.preventDefault();
+        if (!newAnnouncement.title.trim() || !newAnnouncement.content.trim()) {
+            setAnnouncementFeedback({ type: 'error', text: 'Vui lòng nhập đầy đủ tiêu đề và nội dung thông báo!' });
+            return;
+        }
+        setSubmittingAnnouncement(true);
+        setAnnouncementFeedback(null);
+        try {
+            await api.post("/api/admin/announcements", {
+                title: newAnnouncement.title.trim(),
+                content: newAnnouncement.content.trim(),
+                type: newAnnouncement.type,
+                isActive: newAnnouncement.isActive
+            });
+            setNewAnnouncement({ title: '', content: '', type: 'INFO', isActive: true });
+            setAnnouncementFeedback({ type: 'success', text: 'Đã phát hành thông báo hệ thống thành công!' });
+            await fetchAnnouncements();
+            setTimeout(() => setAnnouncementFeedback(null), 3500);
+        } catch (err) {
+            setAnnouncementFeedback({
+                type: 'error',
+                text: err.response?.data?.message || 'Lỗi khi tạo thông báo mới!'
+            });
+        } finally {
+            setSubmittingAnnouncement(false);
+        }
+    };
+
+    // Bật / tắt thông báo (PUT /api/admin/announcements/{id}/toggle)
+    const handleToggleAnnouncement = async (id) => {
+        try {
+            await api.put(`/api/admin/announcements/${id}/toggle`);
+            await fetchAnnouncements();
+        } catch (err) {
+            alert(err.response?.data?.message || 'Lỗi khi đổi trạng thái thông báo!');
+        }
+    };
+
+    // Xoá thông báo (DELETE /api/admin/announcements/{id})
+    const handleDeleteAnnouncement = async (ann) => {
+        if (!window.confirm(`Bạn có chắc chắn muốn xoá thông báo "${ann.title}" không?`)) return;
+        try {
+            await api.delete(`/api/admin/announcements/${ann.id}`);
+            await fetchAnnouncements();
+        } catch (err) {
+            alert(err.response?.data?.message || 'Lỗi khi xoá thông báo!');
+        }
+    };
+
     // Kích hoạt nạp dữ liệu khi chuyển tab
     useEffect(() => {
         if (activeTab === 'overview') fetchStats();
         else if (activeTab === 'users') fetchUsers(0);
         else if (activeTab === 'access_logs') fetchAccessLogs(0);
         else if (activeTab === 'audit_logs') fetchAuditLogs(0);
+        else if (activeTab === 'announcements') fetchAnnouncements();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeTab]);
 
@@ -259,6 +336,7 @@ const AdminDashboard = () => {
                                 else if (activeTab === 'users') fetchUsers(usersCurrentPage);
                                 else if (activeTab === 'access_logs') fetchAccessLogs(logsPage);
                                 else if (activeTab === 'audit_logs') fetchAuditLogs(logsPage);
+                                else if (activeTab === 'announcements') fetchAnnouncements();
                             }}
                             className="p-2 rounded-xl text-slate-500 hover:text-amber-900 hover:bg-amber-50 border border-slate-200 transition-all cursor-pointer"
                             title="Làm mới dữ liệu"
@@ -340,6 +418,18 @@ const AdminDashboard = () => {
                     >
                         <span className="material-symbols-outlined text-[18px]">policy</span>
                         <span>Nhật ký kiểm toán (Audit)</span>
+                    </button>
+
+                    <button
+                        onClick={() => setActiveTab('announcements')}
+                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                            activeTab === 'announcements'
+                                ? 'bg-amber-500 text-white shadow-sm shadow-amber-500/20'
+                                : 'text-slate-600 hover:bg-amber-50 hover:text-amber-900'
+                        }`}
+                    >
+                        <span className="material-symbols-outlined text-[18px]">campaign</span>
+                        <span>Thông báo ứng dụng</span>
                     </button>
                 </div>
             </div>
@@ -867,6 +957,217 @@ const AdminDashboard = () => {
                                     </div>
                                 </div>
                             )}
+                        </div>
+                    </div>
+                )}
+
+                {/* TAB 5: QUẢN LÝ THÔNG BÁO ỨNG DỤNG (ADMIN ANNOUNCEMENTS) */}
+                {activeTab === 'announcements' && (
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-in fade-in duration-200">
+                        {/* Cột trái: Form phát hành thông báo mới (5 cols) */}
+                        <div className="lg:col-span-5">
+                            <div className="bg-white rounded-2xl border border-amber-100/80 shadow-xs p-6 space-y-5 sticky top-24">
+                                <div className="flex items-center gap-3 pb-3 border-b border-amber-100">
+                                    <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+                                        <span className="material-symbols-outlined text-2xl">campaign</span>
+                                    </div>
+                                    <div>
+                                        <h3 className="font-black text-amber-950 text-base">Phát hành Thông báo mới</h3>
+                                        <p className="text-xs text-slate-500">Hiển thị trực tiếp tới toàn bộ người dùng Temoney</p>
+                                    </div>
+                                </div>
+
+                                {announcementFeedback && (
+                                    <div className={`p-3 rounded-xl text-xs font-bold border ${
+                                        announcementFeedback.type === 'success'
+                                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                            : 'bg-rose-50 text-rose-700 border-rose-200'
+                                    }`}>
+                                        {announcementFeedback.text}
+                                    </div>
+                                )}
+
+                                <form onSubmit={handleCreateAnnouncement} className="space-y-4">
+                                    <div>
+                                        <label className="text-xs font-bold text-slate-600 uppercase block mb-1.5">
+                                            Tiêu đề thông báo *
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={newAnnouncement.title}
+                                            onChange={(e) => setNewAnnouncement({ ...newAnnouncement, title: e.target.value })}
+                                            placeholder="VD: Thông báo bảo trì hệ thống hoặc Ra mắt tính năng mới..."
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="text-xs font-bold text-slate-600 uppercase block mb-1.5">
+                                            Phân loại thông báo
+                                        </label>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {[
+                                                { value: 'INFO', label: 'Thông tin', icon: 'info', activeCls: 'bg-blue-600 text-white border-blue-600' },
+                                                { value: 'WARNING', label: 'Cảnh báo', icon: 'warning', activeCls: 'bg-amber-500 text-white border-amber-500' },
+                                                { value: 'MAINTENANCE', label: 'Bảo trì', icon: 'build_circle', activeCls: 'bg-rose-600 text-white border-rose-600' },
+                                                { value: 'PROMOTION', label: 'Cập nhật mới', icon: 'new_releases', activeCls: 'bg-emerald-600 text-white border-emerald-600' }
+                                            ].map((opt) => (
+                                                <button
+                                                    key={opt.value}
+                                                    type="button"
+                                                    onClick={() => setNewAnnouncement({ ...newAnnouncement, type: opt.value })}
+                                                    className={`px-3 py-2 rounded-xl text-xs font-bold border flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                                                        newAnnouncement.type === opt.value
+                                                            ? opt.activeCls
+                                                            : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                                                    }`}
+                                                >
+                                                    <span className="material-symbols-outlined text-base">{opt.icon}</span>
+                                                    <span>{opt.label}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="text-xs font-bold text-slate-600 uppercase block mb-1.5">
+                                            Nội dung chi tiết *
+                                        </label>
+                                        <textarea
+                                            rows={4}
+                                            value={newAnnouncement.content}
+                                            onChange={(e) => setNewAnnouncement({ ...newAnnouncement, content: e.target.value })}
+                                            placeholder="Nhập nội dung thông báo sẽ gửi tới người dùng..."
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none"
+                                            required
+                                        />
+                                    </div>
+
+                                    <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                                        <input
+                                            type="checkbox"
+                                            checked={newAnnouncement.isActive}
+                                            onChange={(e) => setNewAnnouncement({ ...newAnnouncement, isActive: e.target.checked })}
+                                            className="w-4 h-4 accent-amber-600 rounded"
+                                        />
+                                        <span className="text-xs font-bold text-slate-700">
+                                            Kích hoạt hiển thị ngay cho người dùng
+                                        </span>
+                                    </label>
+
+                                    <button
+                                        type="submit"
+                                        disabled={submittingAnnouncement}
+                                        className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+                                    >
+                                        <span className="material-symbols-outlined text-base">send</span>
+                                        <span>{submittingAnnouncement ? 'Đang phát hành...' : 'Phát hành thông báo'}</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        {/* Cột phải: Danh sách thông báo đã tạo (7 cols) */}
+                        <div className="lg:col-span-7">
+                            <div className="bg-white rounded-2xl border border-amber-100/80 shadow-xs overflow-hidden">
+                                <div className="p-5 border-b border-amber-100/80 flex flex-wrap justify-between items-center gap-3">
+                                    <div>
+                                        <h3 className="font-black text-amber-950 text-base">
+                                            Danh sách Thông báo Hệ thống ({announcements.length})
+                                        </h3>
+                                        <p className="text-xs text-slate-500 mt-0.5">
+                                            Đang bật: <b className="text-emerald-600">{announcements.filter(a => a.isActive).length}</b> • Đang ẩn: <b className="text-slate-600">{announcements.filter(a => !a.isActive).length}</b>
+                                        </p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={fetchAnnouncements}
+                                        className="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 text-xs font-bold flex items-center gap-1 cursor-pointer"
+                                    >
+                                        <span className="material-symbols-outlined text-sm">refresh</span>
+                                        <span>Làm mới</span>
+                                    </button>
+                                </div>
+
+                                <div className="p-5 space-y-3">
+                                    {loadingAnnouncements ? (
+                                        <p className="text-center text-xs text-slate-400 py-10">Đang tải danh sách thông báo...</p>
+                                    ) : announcements.length > 0 ? (
+                                        announcements.map((ann) => {
+                                            const typeMap = {
+                                                INFO: { label: 'Thông tin', cls: 'bg-blue-100 text-blue-800 border-blue-200' },
+                                                WARNING: { label: 'Cảnh báo', cls: 'bg-amber-100 text-amber-800 border-amber-200' },
+                                                MAINTENANCE: { label: 'Bảo trì', cls: 'bg-rose-100 text-rose-700 border-rose-200' },
+                                                PROMOTION: { label: 'Cập nhật mới', cls: 'bg-emerald-100 text-emerald-700 border-emerald-200' }
+                                            };
+                                            const typeMeta = typeMap[ann.type] || typeMap.INFO;
+
+                                            return (
+                                                <div
+                                                    key={ann.id}
+                                                    className={`p-4 rounded-2xl border transition-all ${
+                                                        ann.isActive
+                                                            ? 'bg-white border-amber-200/80 shadow-2xs'
+                                                            : 'bg-slate-50/80 border-slate-200 opacity-75'
+                                                    }`}
+                                                >
+                                                    <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
+                                                        <div className="flex flex-wrap items-center gap-2">
+                                                            <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border ${typeMeta.cls}`}>
+                                                                {typeMeta.label}
+                                                            </span>
+                                                            <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
+                                                                ann.isActive
+                                                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                                                    : 'bg-slate-200 text-slate-600'
+                                                            }`}>
+                                                                {ann.isActive ? '● Đang hiển thị' : '○ Đang ẩn'}
+                                                            </span>
+                                                        </div>
+
+                                                        <div className="flex items-center gap-1.5">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleToggleAnnouncement(ann.id)}
+                                                                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all cursor-pointer ${
+                                                                    ann.isActive
+                                                                        ? 'bg-amber-50 hover:bg-amber-500 text-amber-800 hover:text-white border-amber-200'
+                                                                        : 'bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border-emerald-200'
+                                                                }`}
+                                                            >
+                                                                {ann.isActive ? 'Tạm ẩn' : 'Bật hiển thị'}
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleDeleteAnnouncement(ann)}
+                                                                className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 transition-all cursor-pointer"
+                                                            >
+                                                                Xoá
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    <h4 className="font-extrabold text-sm text-slate-900">{ann.title}</h4>
+                                                    <p className="text-xs text-slate-600 mt-1 whitespace-pre-line leading-relaxed">{ann.content}</p>
+                                                    <p className="text-[10px] text-slate-400 mt-2">
+                                                        Tạo lúc: {formatDateTime(ann.createdAt)}
+                                                        {ann.createdBy?.fullName || ann.createdBy?.username
+                                                            ? ` • Bởi: ${ann.createdBy.fullName || ann.createdBy.username}`
+                                                            : ''}
+                                                    </p>
+                                                </div>
+                                            );
+                                        })
+                                    ) : (
+                                        <div className="text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                                            <span className="material-symbols-outlined text-4xl text-slate-300">campaign</span>
+                                            <p className="text-sm font-bold text-slate-600 mt-2">Chưa có thông báo hệ thống nào</p>
+                                            <p className="text-xs text-slate-400 mt-1">Sử dụng biểu mẫu bên trái để phát hành thông báo đầu tiên cho người dùng.</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 )}
